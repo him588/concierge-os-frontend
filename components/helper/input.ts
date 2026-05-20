@@ -39,9 +39,9 @@ export function handleChangeTextarea<T extends object>(
   }
 }
 
-export function clearError(
-  setErrors: React.Dispatch<React.SetStateAction<Record<string, string>>>,
+export function clearError<T extends Record<string, string>>(
+  setErrors: React.Dispatch<React.SetStateAction<T>>,
   key: string,
 ) {
-  setErrors((prev) => ({ ...prev, [key]: "" }));
+  setErrors((prev) => ({ ...prev, [key]: "" }) as T);
 }

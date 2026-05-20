@@ -7,12 +7,44 @@ export interface Services {
   isPaid: boolean;
 }
 
-export interface Staff {
-  id?: string;
+export interface CreateStaff {
   name: string;
-  email: string;
-  mobileNo: string;
-  password: string;
+  email?: string;
+  phone?: string;
   isAvailable: boolean;
   isActive: boolean;
 }
+
+export interface Staff {
+  staffId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  hotelId: string;
+  isAvailable: boolean;
+  isActive: boolean;
+}
+
+export interface StaffService {
+  mappingId: string;
+  serviceId: string;
+  serviceName: string;
+  serviceColor: string;
+  isActive: boolean;
+}
+
+export enum ListingType {
+  QUANTITY = "quantity", // Food, amenities, consumables
+  PERSON = "person", // Spa, fitness classes, consultations
+}
+
+export interface ServiceItem {
+  name: string;
+  description: string;
+  serviceId: string;
+  price: number;
+  isAvailable: boolean;
+  listingType: ListingType;
+}
+
+export type StaffFilter = "all" | "available" | "unavailable" | "inactive";

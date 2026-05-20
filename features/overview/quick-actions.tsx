@@ -1,44 +1,64 @@
-import { BedDouble, ConciergeBell, UserPlus, CalendarPlus } from "lucide-react";
+import { useRoomsContext } from "@/context/room-context";
+import { useServiceContext } from "@/context/service-context";
+import { BedDouble, ConciergeBell, UserPlus, CalendarDays } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
-
-const actions = [
-  {
-    label: "Book a Room",
-    sub: "New reservation",
-    icon: <BedDouble size={18} />,
-    route: "/rooms/book",
-    bg: "#fef3c7",
-    accent: "#d97706",
-  },
-  {
-    label: "Book a Service",
-    sub: "Add service",
-    icon: <ConciergeBell size={18} />,
-    route: "/services/book",
-    bg: "#fdf4ec",
-    accent: "#c2410c",
-  },
-  {
-    label: "Add Guest",
-    sub: "Walk-in check-in",
-    icon: <UserPlus size={18} />,
-    route: "/guests/add",
-    bg: "#f5f0eb",
-    accent: "#92400e",
-  },
-  {
-    label: "New Booking",
-    sub: "Manual entry",
-    icon: <CalendarPlus size={18} />,
-    route: "/bookings/new",
-    bg: "#fef9f0",
-    accent: "#b45309",
-  },
-];
 
 export default function QuickActions() {
   const router = useRouter();
+  const { setCurrentModal } = useRoomsContext();
+  const { setServiceModal } = useServiceContext();
+  const actions = [
+    {
+      label: "Book a Room",
+      sub: "New reservation",
+      icon: <BedDouble size={18} />,
+      action: () => {
+        setCurrentModal("BookRoom");
+      },
+      bg: "#fef3c7",
+      accent: "#d97706",
+    },
+    {
+      label: "Create Room",
+      sub: "Add new room",
+      icon: <BedDouble size={18} />,
+      action: () => {
+        setCurrentModal("createRoom");
+      },
+      bg: "#ecfdf5",
+      accent: "#065f46",
+    },
+    {
+      label: "Add Service",
+      sub: "New service item",
+      icon: <ConciergeBell size={18} />,
+      action: () => {
+        setServiceModal("Services");
+      },
+      bg: "#fdf4ec",
+      accent: "#c2410c",
+    },
+    {
+      label: "Add Guest",
+      sub: "Walk-in check-in",
+      icon: <UserPlus size={18} />,
+      action: () => {
+        setCurrentModal("BookRoom");
+      },
+      bg: "#f5f0eb",
+      accent: "#92400e",
+    },
+    {
+      label: "View Bookings",
+      sub: "All reservations",
+      icon: <CalendarDays size={18} />,
+      action: () => {
+        router.push("earnings");
+      },
+      bg: "#fef9f0",
+      accent: "#b45309",
+    },
+  ];
 
   return (
     <div className="flex flex-col  gap-[10px] p-4  flex-wrap">
@@ -49,7 +69,7 @@ export default function QuickActions() {
         <button
           key={a.label}
           type="button"
-          onClick={() => router.push(a.route)}
+          onClick={a.action}
           className="flex w-full items-center cursor-pointer gap-2.5 px-4 py-2.5 rounded-2xl border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md group"
           style={{
             background: a.bg,

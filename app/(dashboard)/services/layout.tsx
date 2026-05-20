@@ -1,8 +1,7 @@
-import { ServiveContextProvider } from "@/context/service-context";
 import React from "react";
 
 function Layout({ children }: { children: React.ReactNode }) {
-  return <ServiveContextProvider>{children}</ServiveContextProvider>;
+  return { children };
 }
 
 export default Layout;

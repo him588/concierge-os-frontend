@@ -31,10 +31,9 @@ export const ServiveContextProvider = ({
       {children}
       {serviceModal && (
         <Modal
-          modalBoxClassName="rounded-[1.6rem] p-[.5rem] w-auto"
+          modalBoxClassName="rounded-[1.6rem] p-[.5rem]"
           isOpen={serviceModal !== null}
           onClose={() => setServiceModal(null)}
-          title={serviceModal === "Services" ? "Create Service" : "Add Staff"}
           titleClass="text-center text-[#1c1d4e]  text-[1.4rem] font-semibold"
         >
           {serviceModal === "Services" ? (

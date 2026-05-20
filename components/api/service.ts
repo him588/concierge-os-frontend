@@ -1,6 +1,5 @@
 import axios from "axios";
 import { ENV } from "../config/env";
-import { Exo } from "next/font/google";
 import apiClient from "./service-provider";
 
 export function refreshAccessToken() {

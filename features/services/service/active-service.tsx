@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Users, Layers, Wrench } from "lucide-react";
 import CreateCard from "@/features/rooms/components/create-card";
 import { useRouter } from "next/navigation";
@@ -8,38 +8,42 @@ import RecentServices from "./recent-services";
 import DropDown from "@/components/common/drop-down";
 
 export interface Services {
-  id: string;
+  serviceId: string;
   name: string;
   description: string;
   color: string;
-  status: boolean;
-  staffAssigned: number;
-  subServices: number;
+  isActive: boolean;
+  serviceCount: number;
+  staffCount: number;
 }
 
-function ActiveService() {
+interface ActiveServiceProps {
+  filter: "Active" | "Inactive";
+  setFilter: React.Dispatch<React.SetStateAction<"Active" | "Inactive">>;
+}
+
+function ActiveService({ filter, setFilter }: ActiveServiceProps) {
   const dropDownValue = [
     { key: "Active", value: "Active" },
     { key: "Inactive", value: "Inactive" },
   ];
-  const [filter, setFilter] = useState<"Active" | "Inactive">("Active");
   const router = useRouter();
-  const { data } = useGetServices();
+  const { data: services, isError, isLoading } = useGetServices(filter);
   const { setServiceModal } = useServiceContext();
+  useEffect(() => {
+    console.log({ services });
+  }, [services]);
 
-  console.log(data);
+  if (isLoading) return <div>Loading...</div>;
 
-  const filteredServices = useMemo(() => {
-    const filterValue = filter === "Active" ? true : false;
-    return data?.data.services.filter(
-      (service: Services) => service.status === filterValue,
-    );
-  }, [filter, data?.data]);
+  // ✅ error guard
+  if (isError) return <div>Something went wrong.</div>;
 
   return (
     <div className="w-full flex flex-col gap-8">
       {/* Left Section */}
-      <div className="w-full">
+      {}
+      <div className="w-full space-y-4 mt-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <p className="text-[1.5rem] font-semibold text-[#151a2c]">Services</p>
@@ -64,11 +68,11 @@ function ActiveService() {
           />
 
           {/* Service Cards */}
-          {filteredServices &&
-            filteredServices.map((service: Services) => (
+          {services &&
+            services.map((service: Services) => (
               <div
-                key={service.id}
-                onClick={() => router.push(`/services/${service.id}`)}
+                key={service.serviceId}
+                onClick={() => router.push(`/services/${service.serviceId}`)}
                 className="relative h-[150px] rounded-xl p-4
                flex flex-col justify-between cursor-pointer
                transition hover:-translate-y-0.5
@@ -102,7 +106,7 @@ function ActiveService() {
                     <div className="flex items-center gap-1">
                       <Users size={14} />
                       <span className="font-medium text-[#151a2c]">
-                        {service.staffAssigned}
+                        {service.staffCount}
                       </span>
                       <span>Staff</span>
                     </div>
@@ -110,7 +114,7 @@ function ActiveService() {
                     <div className="flex items-center gap-1">
                       <Layers size={14} />
                       <span className="font-medium text-[#151a2c]">
-                        {service.subServices}
+                        {service.serviceCount}
                       </span>
                       <span>Sub</span>
                     </div>
@@ -120,12 +124,12 @@ function ActiveService() {
                   <span
                     className={`text-[11px] px-2 py-[2px] rounded-full font-medium
           ${
-            service.status
+            service.isActive
               ? "bg-green-100 text-green-700"
               : "bg-gray-200 text-gray-600"
           }`}
                   >
-                    {service.status ? "Active" : "InActive"}
+                    {service.isActive ? "Active" : "InActive"}
                   </span>
                 </div>
               </div>

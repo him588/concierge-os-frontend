@@ -6,6 +6,8 @@ import React, { useState } from "react";
 import { Menu } from "lucide-react";
 import { useBaseContext } from "@/context/base-context";
 import LoadingScreen from "@/components/common/loading";
+import { RoomContextProvider } from "@/context/room-context";
+import { ServiveContextProvider } from "@/context/service-context";
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -75,7 +77,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Page content */}
         <div className="flex-1 overflow-y-auto scrollbar-hide pt-2 pb-4">
-          {children}
+          <RoomContextProvider>
+            <ServiveContextProvider>{children}</ServiveContextProvider>
+          </RoomContextProvider>
         </div>
       </div>
     </div>

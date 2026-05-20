@@ -7,7 +7,7 @@ import {
   getLatestBookings,
 } from "@/features/overview/services/services";
 
-type Timeframe = "week" | "month" | "year";
+export type Timeframe = "week" | "month" | "year";
 
 export function useUserDetails(isEnabled: boolean) {
   return useQuery({
