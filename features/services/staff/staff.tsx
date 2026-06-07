@@ -23,14 +23,7 @@ function Staff() {
           onButtonClick={() => setServiceModal("Staff")}
         />
       ) : (
-        <StaffPage
-          // staff={data?.data.staff}
-          onAddStaff={() => setServiceModal("Staff")}
-          // onEdit={(s) => setEditTarget(s)}
-          // onToggleAvailability={(id) => mutate({ id, field: "isAvailable" })}
-          // onToggleActive={(id) => mutate({ id, field: "isActive" })}
-          // onDelete={(id) => deleteStaff(id)}
-        />
+        <StaffPage onAddStaff={() => setServiceModal("Staff")} />
       )}
     </section>
   );

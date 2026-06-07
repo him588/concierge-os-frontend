@@ -52,10 +52,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       route: "/earnings",
     },
     {
-      name: "Guests",
+      name: "Profile",
       icon: <UsersRound size={16} />,
       isActive: false,
-      route: "/guests",
+      route: "/profile",
     },
   ]);
 

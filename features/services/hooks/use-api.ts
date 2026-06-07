@@ -20,6 +20,7 @@ import {
   assignStaff,
   assignStaffToService,
   deleteStaffFromStaff,
+  deleteStaff,
 } from "../api/api";
 import { CreateStaff, ServiceItem, Services } from "../types/types";
 
@@ -234,19 +235,15 @@ export const useGetStaffListInfinite = (
       }),
     getNextPageParam: (lastPage) => {
       const { pageNo, totalPages } = lastPage?.data?.pagination ?? {};
-      // Return next page number if there are more pages, otherwise undefined
       return pageNo < totalPages ? pageNo + 1 : undefined;
     },
     initialPageParam: 1,
     select: (data) => ({
-      // Flatten all pages into a single array
       staffList: data.pages.flatMap((page) => page?.data?.staff ?? []),
-      // Keep pagination info from the last page
       pagination: data.pages[data.pages.length - 1]?.data?.pagination ?? {
         total: 0,
         totalPages: 1,
       },
-      // Expose pages if you need them separately
       pages: data.pages,
     }),
   });
@@ -266,6 +263,21 @@ export const useDeleteStaffFromService = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ["serviceDetails", variable.serviceId],
+      });
+    },
+  });
+};
+
+export const useDeleteStaff = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteStaff,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["staffList"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["staff"],
       });
     },
   });

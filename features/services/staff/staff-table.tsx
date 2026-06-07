@@ -1,21 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Phone,
   Mail,
   MoreHorizontal,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
   Trash2,
-  ShieldOff,
-  Shield,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { Staff } from "../types/types";
+import Modal from "@/components/common/modal";
+import { useDeleteStaff } from "../hooks/use-api";
+import { useUIContext } from "@/context/ui-context";
 
 // ── Initials avatar ────────────────────────────────────────────────────────────
 function Avatar({ name }: { name: string }) {
@@ -34,25 +32,32 @@ function Avatar({ name }: { name: string }) {
 }
 
 // ── Row actions menu ───────────────────────────────────────────────────────────
-function RowMenu({
-  staff,
-  onEdit,
-  onToggleAvailability,
-  onToggleActive,
-  onDelete,
-}: {
-  staff: Staff;
-  onEdit?: (s: Staff) => void;
-  onToggleAvailability?: (id: string) => void;
-  onToggleActive?: (id: string) => void;
-  onDelete?: (id: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
+function RowMenu({ staff }: { staff: Staff }) {
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const [showWarning, setShowWarning] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const open = pos !== null;
+
+  const handleOpen = () => {
+    if (open) {
+      setPos(null);
+      return;
+    }
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) {
+      setPos({
+        top: rect.bottom + 4,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  };
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen((v) => !v)}
+        ref={buttonRef}
+        onClick={handleOpen}
         className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-all"
       >
         <MoreHorizontal size={15} />
@@ -60,57 +65,33 @@ function RowMenu({
 
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 w-44 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden py-1">
-            <MenuItem
-              icon={<Pencil size={13} />}
-              label="Edit staff"
-              onClick={() => {
-                onEdit?.(staff);
-                setOpen(false);
-              }}
-            />
-            <MenuItem
-              icon={
-                staff.isAvailable ? (
-                  <ToggleLeft size={13} />
-                ) : (
-                  <ToggleRight size={13} />
-                )
-              }
-              label={staff.isAvailable ? "Mark unavailable" : "Mark available"}
-              onClick={() => {
-                onToggleAvailability?.(staff._id);
-                setOpen(false);
-              }}
-            />
-            <MenuItem
-              icon={
-                staff.isActive ? <ShieldOff size={13} /> : <Shield size={13} />
-              }
-              label={staff.isActive ? "Deactivate" : "Activate"}
-              onClick={() => {
-                onToggleActive?.(staff._id);
-                setOpen(false);
-              }}
-            />
-            <div className="h-px bg-stone-100 my-1" />
+          <div className="fixed inset-0 z-10" onClick={() => setPos(null)} />
+          <div
+            className="fixed z-20 w-44 bg-white border border-stone-200 rounded-xl shadow-lg overflow-hidden py-1"
+            style={{ top: pos!.top, right: pos!.right }}
+          >
             <MenuItem
               icon={<Trash2 size={13} />}
               label="Remove"
               danger
               onClick={() => {
-                onDelete?.(staff._id);
-                setOpen(false);
+                setPos(null); // close dropdown first
+                setShowWarning(true); // then open modal
               }}
             />
           </div>
         </>
       )}
+
+      {/* Outside {open &&} so it survives dropdown unmounting */}
+      <Modal isOpen={showWarning} onClose={() => setShowWarning(false)}>
+        <DeleteWarning staff={staff} onclose={() => setShowWarning(false)} />
+      </Modal>
     </div>
   );
 }
 
+// ── Menu item ──────────────────────────────────────────────────────────────────
 function MenuItem({
   icon,
   label,
@@ -139,31 +120,23 @@ function MenuItem({
 }
 
 // ── StaffRow ───────────────────────────────────────────────────────────────────
-function StaffRow({
-  staff,
-  onEdit,
-  onToggleAvailability,
-  onToggleActive,
-  onDelete,
-}: {
-  staff: Staff;
-  onEdit?: (s: Staff) => void;
-  onToggleAvailability?: (id: string) => void;
-  onToggleActive?: (id: string) => void;
-  onDelete?: (id: string) => void;
-}) {
+function StaffRow({ staff }: { staff: Staff }) {
   const [expanded, setExpanded] = useState(false);
-  const activeServices = staff.services?.filter((s) => s.isActive) ?? [];
-  const inactiveServices = staff.services?.filter((s) => !s.isActive) ?? [];
+  const assignedService = staff.assignedServices || [];
+
+  // Applied per content <td> only — never on the actions <td>
+  // so opacity never bleeds into the fixed-position dropdown or modal
+  const dimmed = !staff.isActive ? "opacity-50" : "";
 
   return (
     <>
       <tr
-        className={`border-b border-stone-100 transition-colors
-          ${!staff.isActive ? "opacity-50" : "hover:bg-amber-50/30"}`}
+        className={`border-b border-stone-100 transition-colors ${
+          staff.isActive ? "hover:bg-amber-50/30" : ""
+        }`}
       >
         {/* Name + avatar */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <div className="flex items-center gap-3">
             <Avatar name={staff.name} />
             <div>
@@ -171,14 +144,14 @@ function StaffRow({
                 {staff.name}
               </p>
               <p className="text-[10px] text-stone-400 font-mono">
-                #{staff._id.slice(-6).toUpperCase()}
+                #{staff.staffId.slice(-6).toUpperCase()}
               </p>
             </div>
           </div>
         </td>
 
         {/* Contact */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <div className="space-y-1">
             {staff.email && (
               <div className="flex items-center gap-1.5 text-xs text-stone-500">
@@ -196,32 +169,32 @@ function StaffRow({
         </td>
 
         {/* Services */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <div className="flex flex-wrap gap-1.5">
-            {activeServices.length === 0 ? (
+            {assignedService.length === 0 ? (
               <span className="text-xs text-stone-300 italic">No services</span>
             ) : (
               <>
-                {activeServices.slice(0, 2).map((s) => (
+                {assignedService.slice(0, 2).map((s) => (
                   <span
-                    key={s.mappingId}
+                    key={s.serviceId}
                     className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full"
                     style={{
-                      background: s.serviceColor + "18",
-                      color: s.serviceColor,
-                      border: `1px solid ${s.serviceColor}30`,
+                      background: s.color + "18",
+                      color: s.color,
+                      border: `1px solid ${s.color}30`,
                     }}
                   >
                     <span
-                      className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ background: s.serviceColor }}
+                      className="w-1.5 h-1.5 text-nowrap rounded-full shrink-0"
+                      style={{ background: s.color }}
                     />
-                    {s.serviceName}
+                    <span className="text-nowrap">{s.name}</span>
                   </span>
                 ))}
-                {activeServices.length > 2 && (
+                {assignedService.length > 2 && (
                   <span className="text-[11px] font-medium text-stone-400 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">
-                    +{activeServices.length - 2} more
+                    +{assignedService.length - 2} more
                   </span>
                 )}
               </>
@@ -230,9 +203,8 @@ function StaffRow({
         </td>
 
         {/* Availability */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <button
-            onClick={() => onToggleAvailability?.(staff._id)}
             className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all
               ${
                 staff.isAvailable
@@ -241,14 +213,16 @@ function StaffRow({
               }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${staff.isAvailable ? "bg-emerald-400" : "bg-stone-300"}`}
+              className={`w-1.5 h-1.5 rounded-full ${
+                staff.isAvailable ? "bg-emerald-400" : "bg-stone-300"
+              }`}
             />
             {staff.isAvailable ? "Available" : "Unavailable"}
           </button>
         </td>
 
         {/* Status */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <span
             className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border
               ${
@@ -258,23 +232,25 @@ function StaffRow({
               }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${staff.isActive ? "bg-amber-400" : "bg-rose-400"}`}
+              className={`w-1.5 h-1.5 rounded-full ${
+                staff.isActive ? "bg-amber-400" : "bg-rose-400"
+              }`}
             />
             {staff.isActive ? "Active" : "Inactive"}
           </span>
         </td>
 
         {/* Joined */}
-        <td className="px-5 py-3.5">
+        <td className={`px-5 py-3.5 ${dimmed}`}>
           <span className="text-xs text-stone-400 font-jakarta">
             {dayjs(staff.createdAt).format("D MMM YYYY")}
           </span>
         </td>
 
-        {/* Actions */}
+        {/* Actions — never dimmed so dropdown + modal are unaffected */}
         <td className="px-5 py-3.5">
           <div className="flex items-center gap-1">
-            {(staff.services?.length ?? 0) > 0 && (
+            {(staff.assignedServices?.length ?? 0) > 0 && (
               <button
                 onClick={() => setExpanded((v) => !v)}
                 className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-all"
@@ -282,13 +258,7 @@ function StaffRow({
                 {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
             )}
-            <RowMenu
-              staff={staff}
-              onEdit={onEdit}
-              onToggleAvailability={onToggleAvailability}
-              onToggleActive={onToggleActive}
-              onDelete={onDelete}
-            />
+            <RowMenu staff={staff} />
           </div>
         </td>
       </tr>
@@ -302,27 +272,21 @@ function StaffRow({
                 All service assignments
               </p>
               <div className="flex flex-wrap gap-2">
-                {staff.services?.map((s) => (
+                {assignedService.map((s) => (
                   <div
-                    key={s.mappingId}
-                    className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border
-                      ${s.isActive ? "opacity-100" : "opacity-40"}`}
+                    key={s.serviceId}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border"
                     style={{
-                      background: s.serviceColor + "15",
-                      color: s.serviceColor,
-                      border: `1px solid ${s.serviceColor}25`,
+                      background: s.color + "15",
+                      color: s.color,
+                      border: `1px solid ${s.color}25`,
                     }}
                   >
                     <span
                       className="w-1.5 h-1.5 rounded-full shrink-0"
-                      style={{ background: s.serviceColor }}
+                      style={{ background: s.color }}
                     />
-                    {s.serviceName}
-                    {!s.isActive && (
-                      <span className="text-[10px] ml-1 opacity-60">
-                        (disabled)
-                      </span>
-                    )}
+                    {s.name}
                   </div>
                 ))}
               </div>
@@ -337,19 +301,9 @@ function StaffRow({
 // ── StaffTable ─────────────────────────────────────────────────────────────────
 interface StaffTableProps {
   staff: Staff[];
-  onEdit?: (s: Staff) => void;
-  onToggleAvailability?: (id: string) => void;
-  onToggleActive?: (id: string) => void;
-  onDelete?: (id: string) => void;
 }
 
-export function StaffTable({
-  staff,
-  onEdit,
-  onToggleAvailability,
-  onToggleActive,
-  onDelete,
-}: StaffTableProps) {
+export function StaffTable({ staff }: StaffTableProps) {
   if (staff.length === 0) return null;
 
   return (
@@ -378,17 +332,114 @@ export function StaffTable({
           </thead>
           <tbody>
             {staff.map((s) => (
-              <StaffRow
-                key={s._id}
-                staff={s}
-                onEdit={onEdit}
-                onToggleAvailability={onToggleAvailability}
-                onToggleActive={onToggleActive}
-                onDelete={onDelete}
-              />
+              <StaffRow key={s.staffId} staff={s} />
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Delete warning ─────────────────────────────────────────────────────────────
+export function DeleteWarning({
+  staff,
+  onclose,
+}: {
+  staff: Staff;
+  onclose: () => void;
+}) {
+  const { isPending, mutate: deleteStaff } = useDeleteStaff();
+  const { setToastMessage, setToastType } = useUIContext();
+
+  function handleDelete() {
+    deleteStaff(
+      { staffId: staff.staffId },
+      {
+        onSuccess: () => {
+          setToastType("success");
+          setToastMessage(`${staff.name} has been removed.`);
+          onclose();
+        },
+        onError: () => {
+          setToastType("error");
+          setToastMessage("Failed to remove staff. Please try again.");
+        },
+      },
+    );
+  }
+
+  return (
+    <div className="relative w-full">
+      {/* Icon */}
+      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+        <svg
+          className="h-6 w-6 text-red-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+          />
+        </svg>
+      </div>
+
+      {/* Text */}
+      <h2 className="mb-2 text-lg font-semibold text-gray-900">
+        Delete Staff Member
+      </h2>
+      <p className="mb-6 text-sm leading-relaxed text-gray-500">
+        <span className="font-medium text-gray-700">{staff.name}</span> will be
+        permanently removed from your staff list. This action is{" "}
+        <span className="font-medium text-red-500">irreversible</span>.
+      </p>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <button
+          onClick={onclose}
+          disabled={isPending}
+          className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleDelete}
+          disabled={isPending}
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isPending ? (
+            <>
+              <svg
+                className="h-4 w-4 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                />
+              </svg>
+              Removing…
+            </>
+          ) : (
+            `Remove ${staff.name}`
+          )}
+        </button>
       </div>
     </div>
   );

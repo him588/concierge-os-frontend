@@ -14,6 +14,7 @@ export function QueryContextProvider({
         retryDelay: 300,
         refetchOnWindowFocus: false,
         refetchOnMount: false, // Don't refetch on mount if fresh
+        staleTime: 3000,
       },
     },
   });

@@ -22,7 +22,7 @@ function AssignedStaffSection({ serviceId }: { serviceId: string }) {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useGetStaffListInfinite(3, "include", "", serviceId);
+  } = useGetStaffListInfinite(5, "include", "", serviceId);
   const { mutate: deleteStaff } = useDeleteStaffFromService();
 
   const staffList = staffData?.staffList || [];

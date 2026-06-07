@@ -87,8 +87,11 @@ export const useBookRoomById = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (bookingData: BookRoomPlayload) => bookRoomById(bookingData),
-    onSuccess: () => {
+    onSuccess: (data, bookingData) => {
       queryClient.invalidateQueries({ queryKey: ["room-status"] });
+      queryClient.invalidateQueries({
+        queryKey: ["bookings", bookingData.roomId],
+      });
     },
   });
 };

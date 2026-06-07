@@ -25,6 +25,38 @@ export enum RoomBookingStatus {
   CANCELLED = "cancelled",
 }
 
+export interface RoomBookingParams {
+  offset?: number;
+  pageSize?: number;
+  status?:
+    | "pending"
+    | "confirmed"
+    | "checked_in"
+    | "checked_out"
+    | "cancelled"
+    | "";
+  search?: string;
+  roomId?: string;
+  roomType?: string;
+}
+
+export interface FilterType {
+  type: string;
+  value: RoomBookingParams["status"];
+}
+
+export interface RoomBookings {
+  guestName: string;
+  guestPhone?: string;
+  guestEmail: string;
+  checkIn: string;
+  checkOut: string;
+  status: RoomBookingStatus;
+  totalNights: number;
+  totalAmount: number;
+  bookingId: string;
+}
+
 export interface IWidgetUser {
   _id: string;
   name: string;
@@ -57,10 +89,4 @@ export interface IRoomBooking {
 export interface RoomBookingsListProps {
   roomId: string;
   roomNumber: string;
-}
-
-export interface FilterType {
-  type: string;
-  value: string;
-  count: number;
 }

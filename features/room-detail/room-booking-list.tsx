@@ -1,30 +1,35 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarX, Plus } from "lucide-react";
+import { CalendarX, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import SearchBar from "@/components/common/search-bar";
 import {
-  FilterType,
+  RoomBookings,
   RoomBookingsListProps,
   RoomBookingStatus,
 } from "./types/types";
-import { useRoomBookingsCount } from "./hooks/use-rooms";
 import { useRoomsContext } from "@/context/room-context";
-import { bookingStatusConfig } from "./types/const";
+import { bookingStatusConfig, Filters } from "./types/const";
+import { useGetDynamicRoomBookings } from "./hooks/use-rooms";
+import { BookingCard } from "./booking-card";
 
 export function RoomBookingsList({
   roomId,
   roomNumber,
 }: RoomBookingsListProps) {
-  const [activeFilter, setActiveFilter] = useState<"all" | RoomBookingStatus>(
-    "all",
-  );
-  const [filters, setFilters] = useState<FilterType[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState(Filters[0]);
   const [search, setSearch] = useState("");
-  const { data } = useRoomBookingsCount(roomId);
+  const [debouncedInput, setDebouncedInput] = useState("");
+
   const { setActiveRoom, setCurrentModal } = useRoomsContext();
-  // Summary counts
+  const [currentPage, setCurrentPage] = useState(1);
+  const { data: bookings } = useGetDynamicRoomBookings({
+    pageSize: 10,
+    offset: (currentPage - 1) * 10,
+    search: debouncedInput,
+    roomId: roomId,
+    status: selectedFilter.value,
+  });
 
   function handleNewBooking() {
     setCurrentModal("BookRoom");
@@ -35,40 +40,16 @@ export function RoomBookingsList({
   }
 
   useEffect(() => {
-    if (data?.data) {
-      const bookings = data.data.bookings || [];
-      if (bookings) {
-        setFilters(() => {
-          const updatedFilter = bookings.map(
-            (item: { type: string; count: number }) => {
-              const modifyType = (item.type || "")
-                .split("_")
-                .map(
-                  (text) =>
-                    text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(),
-                )
-                .join(" ");
-              return { type: modifyType, value: item.type, count: item.count };
-            },
-          );
-          const allCount = updatedFilter.reduce(
-            (acc: number, curr: FilterType) => {
-              return acc + curr.count;
-            },
-            0,
-          );
-          return [
-            { type: "all", value: "all", count: allCount },
-            ...updatedFilter,
-          ];
-        });
-      }
-    }
-  }, [data?.data]);
+    const timeout = setTimeout(() => {
+      setDebouncedInput(search);
+    }, 500);
 
-  useEffect(() => {
-    console.log(filters);
-  }, [filters]);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  const filterBookings: RoomBookings[] = bookings?.data.bookings || [];
+  const totalPages = bookings?.data.totalPages || 1;
+  const isEmpty = filterBookings.length === 0;
 
   return (
     <section className="space-y-4">
@@ -78,9 +59,6 @@ export function RoomBookingsList({
           <p className="text-[10px] uppercase tracking-widest text-stone-400 font-jakarta">
             Bookings
           </p>
-          {/* <p className="text-sm font-medium text-stone-700 mt-0.5">
-            {bookings.length} total booking{bookings.length !== 1 ? "s" : ""}
-          </p> */}
         </div>
         <button
           onClick={handleNewBooking}
@@ -102,17 +80,20 @@ export function RoomBookingsList({
 
         {/* Filter tabs */}
         <div className="flex flex-wrap gap-1.5">
-          {filters.map((f) => {
-            const active = activeFilter === f.value;
+          {Filters.map((f) => {
+            const active = selectedFilter.value === f.value;
             const cfg =
-              f.value !== "all" &&
+              f.value !== "" &&
               bookingStatusConfig[f.value as RoomBookingStatus]
                 ? bookingStatusConfig[f.value as RoomBookingStatus]
                 : null;
             return (
               <button
                 key={f.value}
-                onClick={() => setActiveFilter(f.value as RoomBookingStatus)}
+                onClick={() => {
+                  setSelectedFilter(f);
+                  setCurrentPage(1);
+                }}
                 className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all
                   ${
                     active
@@ -123,16 +104,14 @@ export function RoomBookingsList({
                   }`}
               >
                 {f.type}
-                {f.value !== "all" && f.count > 0 && (
-                  <span className="ml-1.5 opacity-60">{f.count}</span>
-                )}
               </button>
             );
           })}
         </div>
       </div>
 
-      {filters.find((item) => item.type === "all")?.count === 0 && (
+      {/* ── Booking cards / empty state ── */}
+      {isEmpty ? (
         <div className="bg-white border border-dashed border-stone-200 rounded-2xl py-14 flex flex-col items-center gap-3">
           <CalendarX size={28} className="text-stone-300" />
           <p className="text-sm text-stone-400">No bookings found</p>
@@ -144,6 +123,37 @@ export function RoomBookingsList({
               Clear search
             </button>
           )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filterBookings.map((booking) => (
+            <BookingCard key={booking.bookingId} booking={booking} />
+          ))}
+        </div>
+      )}
+
+      {/* ── Pagination ── */}
+      {!isEmpty && totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-[11px] text-stone-400">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronLeft size={13} />
+            </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:border-stone-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={13} />
+            </button>
+          </div>
         </div>
       )}
     </section>

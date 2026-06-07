@@ -4,6 +4,7 @@ import { UiContextProvider } from "@/context/ui-context";
 import BaseContextProvider from "@/context/base-context";
 import { QueryContextProvider } from "@/context/query-context";
 import "./globals.css";
+import BookingWidget from "@/components/BookingWidget";
 
 const geistSans = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",

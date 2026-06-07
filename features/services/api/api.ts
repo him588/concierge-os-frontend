@@ -1,5 +1,6 @@
 import apiClient from "@/components/api/service-provider";
 import { CreateStaff, ServiceItem, Services, Staff } from "../types/types";
+import { RoomBookingStatus } from "@/features/room-detail/types/types";
 
 export async function getServicesInfo(status: "Active" | "Inactive") {
   return apiClient.get("/services", {
@@ -115,5 +116,27 @@ export async function deleteStaffFromStaff({
       staffId,
       serviceId,
     },
+  });
+}
+
+export async function deleteStaff({ staffId }: { staffId: string }) {
+  return apiClient.delete(`/staff/${staffId}`);
+}
+
+export async function getServiceBookings({
+  guestId,
+  serviceId,
+  status,
+  pageSize,
+  offset,
+}: {
+  guestId: string;
+  serviceId: string;
+  status: RoomBookingStatus;
+  pageSize: number;
+  offset: number;
+}) {
+  return apiClient.get("/bookings", {
+    params: { guestId, serviceId, status, pageSize, offset },
   });
 }

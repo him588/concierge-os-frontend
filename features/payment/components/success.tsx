@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePayment } from "@/context/payment-context";
+import { formatDate } from "@/components/helper/common";
 
-export default function BookingSuccessPage({ id }: { id: string }) {
+export default function BookingSuccessPage() {
   const router = useRouter();
-  const { paymentInfo } = usePayment();
+  const { paymentInfo, servicePaymentInfo, paymentType } = usePayment();
+
   function formateDate() {
     const date = new Date();
     return date.toLocaleDateString("en-gb", {
@@ -17,7 +18,13 @@ export default function BookingSuccessPage({ id }: { id: string }) {
     });
   }
 
-  if (paymentInfo.bookingId === "") {
+  // Guard: nothing in context at all
+  const hasRoomBooking =
+    paymentType === "roomBooking" && paymentInfo.bookingId !== "";
+  const hasServiceBooking =
+    paymentType === "serviceBooking" && servicePaymentInfo !== null;
+
+  if (!hasRoomBooking && !hasServiceBooking) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -27,28 +34,34 @@ export default function BookingSuccessPage({ id }: { id: string }) {
           <p style={{ color: "#57534e" }}>Booking not found</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 px-6 py-2 rounded-lg btn-gradient"
+            className="mt-4 px-6 py-2 rounded-lg"
+            style={{
+              background: "linear-gradient(135deg, #f59e0b, #f97316)",
+              color: "white",
+            }}
           >
             Back to Home
           </button>
         </div>
-        <style jsx>{`
-          .btn-gradient {
-            background: linear-gradient(135deg, #f59e0b, #f97316);
-            color: white;
-          }
-        `}</style>
       </div>
     );
   }
 
+  // ── Shared layout wrappers ────────────────────────────────────────────────────
+  const guestEmail = hasServiceBooking
+    ? servicePaymentInfo!.guestEmail
+    : paymentInfo.guestEmail;
+
+  const guestName = hasServiceBooking
+    ? servicePaymentInfo!.guestName
+    : paymentInfo.guestName;
+
   return (
     <div className="min-h-screen py-12" style={{ backgroundColor: "#fffbf5" }}>
-      {/* Background mesh */}
       <div className="fixed inset-0 pointer-events-none bg-mesh"></div>
 
       <div className="relative max-w-3xl mx-auto px-4">
-        {/* Success Animation */}
+        {/* Success badge */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 success-badge">
             <svg
@@ -70,22 +83,23 @@ export default function BookingSuccessPage({ id }: { id: string }) {
             Payment Successful!
           </h1>
           <p className="text-lg mb-2" style={{ color: "#44403c" }}>
-            Your booking has been confirmed
+            Your {hasServiceBooking ? "service booking" : "booking"} has been
+            confirmed
           </p>
           <p className="text-sm" style={{ color: "#78716c" }}>
             Confirmation sent to{" "}
             <span className="font-medium" style={{ color: "#d97706" }}>
-              {paymentInfo.guestEmail}
+              {guestEmail}
             </span>
           </p>
         </div>
 
-        {/* Booking Details Card */}
+        {/* Details Card */}
         <div
           className="bg-white rounded-2xl shadow-lg border overflow-hidden mb-6"
           style={{ borderColor: "#e7e5e4" }}
         >
-          {/* Header */}
+          {/* Card header */}
           <div className="px-8 py-6 gradient-header">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
@@ -93,16 +107,28 @@ export default function BookingSuccessPage({ id }: { id: string }) {
                   className="text-2xl font-bold mb-1"
                   style={{ color: "#1c1917" }}
                 >
-                  Booking Confirmed
+                  {hasServiceBooking
+                    ? "Services Confirmed"
+                    : "Booking Confirmed"}
                 </h2>
                 <p className="text-sm" style={{ color: "#78716c" }}>
-                  Booking Reference:{" "}
-                  <span
-                    className="font-mono font-semibold"
-                    style={{ color: "#d97706" }}
-                  >
-                    #{paymentInfo.bookingId.slice(-8).toUpperCase()}
-                  </span>
+                  {hasServiceBooking ? (
+                    <>
+                      {servicePaymentInfo!.services.length} service
+                      {servicePaymentInfo!.services.length > 1 ? "s" : ""}{" "}
+                      booked
+                    </>
+                  ) : (
+                    <>
+                      Booking Reference:{" "}
+                      <span
+                        className="font-mono font-semibold"
+                        style={{ color: "#d97706" }}
+                      >
+                        #{paymentInfo.bookingId.slice(-8).toUpperCase()}
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
               <div className="text-right">
@@ -116,137 +142,230 @@ export default function BookingSuccessPage({ id }: { id: string }) {
             </div>
           </div>
 
-          {/* Content */}
           <div className="px-8 py-8 space-y-8">
-            {/* Room Details */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#fef3c7" }}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    style={{ color: "#d97706" }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
-                </div>
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: "#1c1917" }}
-                >
-                  Room Details
-                </h3>
-              </div>
-              <div
-                className="grid grid-cols-2 gap-4 p-4 rounded-xl"
-                style={{
-                  backgroundColor: "#fafaf9",
-                  border: "1px solid #f5f5f4",
-                }}
-              >
+            {/* ── SERVICE BOOKING DETAILS ── */}
+            {hasServiceBooking && (
+              <>
                 <div>
-                  <p className="text-sm mb-1" style={{ color: "#78716c" }}>
-                    Room Type
-                  </p>
-                  <p className="font-semibold" style={{ color: "#44403c" }}>
-                    {paymentInfo.roomType}
-                  </p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: "#fef3c7" }}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        style={{ color: "#d97706" }}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      className="text-lg font-semibold"
+                      style={{ color: "#1c1917" }}
+                    >
+                      Services Booked
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {servicePaymentInfo!.services.map((service, index) => (
+                      <div
+                        key={service.bookingId || index}
+                        className="flex items-start justify-between p-4 rounded-xl"
+                        style={{
+                          backgroundColor: "#fafaf9",
+                          border: "1px solid #f5f5f4",
+                        }}
+                      >
+                        <div>
+                          <p
+                            className="font-semibold"
+                            style={{ color: "#44403c" }}
+                          >
+                            {service.serviceName}
+                          </p>
+                          {service.description && (
+                            <p
+                              className="text-xs mt-0.5"
+                              style={{ color: "#a8a29e" }}
+                            >
+                              {service.description}
+                            </p>
+                          )}
+                          <p
+                            className="text-sm mt-1"
+                            style={{ color: "#78716c" }}
+                          >
+                            {service.listingType === "quantity"
+                              ? `Qty: ${service.quantity}`
+                              : `${service.quantity} person${service.quantity > 1 ? "s" : ""}`}
+                            {service.scheduledAt && (
+                              <span className="ml-2">
+                                · {formatDate(service.scheduledAt)}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <p
+                          className="font-semibold flex-shrink-0 ml-4"
+                          style={{ color: "#d97706" }}
+                        >
+                          ₹{service.totalAmount.toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              </>
+            )}
+
+            {/* ── ROOM BOOKING DETAILS ── */}
+            {hasRoomBooking && (
+              <>
+                {/* Room Details */}
                 <div>
-                  <p className="text-sm mb-1" style={{ color: "#78716c" }}>
-                    Room Number
-                  </p>
-                  <p className="font-semibold" style={{ color: "#44403c" }}>
-                    {paymentInfo.roomNumber}
-                  </p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: "#fef3c7" }}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        style={{ color: "#d97706" }}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      className="text-lg font-semibold"
+                      style={{ color: "#1c1917" }}
+                    >
+                      Room Details
+                    </h3>
+                  </div>
+                  <div
+                    className="grid grid-cols-2 gap-4 p-4 rounded-xl"
+                    style={{
+                      backgroundColor: "#fafaf9",
+                      border: "1px solid #f5f5f4",
+                    }}
+                  >
+                    <div>
+                      <p className="text-sm mb-1" style={{ color: "#78716c" }}>
+                        Room Type
+                      </p>
+                      <p className="font-semibold" style={{ color: "#44403c" }}>
+                        {paymentInfo.roomType}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm mb-1" style={{ color: "#78716c" }}>
+                        Room Number
+                      </p>
+                      <p className="font-semibold" style={{ color: "#44403c" }}>
+                        {paymentInfo.roomNumber}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Check-in/Check-out */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "#fef3c7" }}
-                >
-                  <svg
-                    className="w-5 h-5"
-                    style={{ color: "#d97706" }}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                {/* Stay Dates */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: "#fef3c7" }}
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        style={{ color: "#d97706" }}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      className="text-lg font-semibold"
+                      style={{ color: "#1c1917" }}
+                    >
+                      Stay Dates
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <p
+                        className="text-sm font-medium mb-2"
+                        style={{ color: "#92400e" }}
+                      >
+                        Check-in
+                      </p>
+                      <p
+                        className="text-lg font-bold"
+                        style={{ color: "#78350f" }}
+                      >
+                        {paymentInfo.checkInDate}
+                      </p>
+                      <p className="text-sm mt-1" style={{ color: "#92400e" }}>
+                        After 2:00 PM
+                      </p>
+                    </div>
+                    <div
+                      className="p-4 rounded-xl"
+                      style={{
+                        backgroundColor: "#fffbeb",
+                        border: "1px solid #fde68a",
+                      }}
+                    >
+                      <p
+                        className="text-sm font-medium mb-2"
+                        style={{ color: "#92400e" }}
+                      >
+                        Check-out
+                      </p>
+                      <p
+                        className="text-lg font-bold"
+                        style={{ color: "#78350f" }}
+                      >
+                        {paymentInfo.checkOutDate}
+                      </p>
+                      <p className="text-sm mt-1" style={{ color: "#92400e" }}>
+                        Before 11:00 AM
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: "#1c1917" }}
-                >
-                  Stay Dates
-                </h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  className="p-4 rounded-xl"
-                  style={{
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
-                >
-                  <p
-                    className="text-sm font-medium mb-2"
-                    style={{ color: "#92400e" }}
-                  >
-                    Check-in
-                  </p>
-                  <p className="text-lg font-bold" style={{ color: "#78350f" }}>
-                    {paymentInfo.checkInDate}
-                  </p>
-                  <p className="text-sm mt-1" style={{ color: "#92400e" }}>
-                    After 2:00 PM
-                  </p>
-                </div>
-                <div
-                  className="p-4 rounded-xl"
-                  style={{
-                    backgroundColor: "#fffbeb",
-                    border: "1px solid #fde68a",
-                  }}
-                >
-                  <p
-                    className="text-sm font-medium mb-2"
-                    style={{ color: "#92400e" }}
-                  >
-                    Check-out
-                  </p>
-                  <p className="text-lg font-bold" style={{ color: "#78350f" }}>
-                    {paymentInfo.checkOutDate}
-                  </p>
-                  <p className="text-sm mt-1" style={{ color: "#92400e" }}>
-                    Before 11:00 AM
-                  </p>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            {/* Guest Information */}
+            {/* Guest Information — shared */}
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div
@@ -283,15 +402,15 @@ export default function BookingSuccessPage({ id }: { id: string }) {
                 }}
               >
                 <p className="font-semibold mb-2" style={{ color: "#44403c" }}>
-                  {paymentInfo.guestName}
+                  {guestName}
                 </p>
                 <p className="text-sm" style={{ color: "#78716c" }}>
-                  {paymentInfo.guestEmail}
+                  {guestEmail}
                 </p>
               </div>
             </div>
 
-            {/* Payment Summary */}
+            {/* Payment Summary — shared */}
             <div className="pt-6 border-t-2" style={{ borderColor: "#e7e5e4" }}>
               <div className="flex items-center gap-2 mb-4">
                 <div
@@ -333,7 +452,10 @@ export default function BookingSuccessPage({ id }: { id: string }) {
                     className="text-2xl font-bold"
                     style={{ color: "#065f46" }}
                   >
-                    ₹{paymentInfo.totalAmount.toLocaleString()}
+                    ₹
+                    {hasServiceBooking
+                      ? servicePaymentInfo!.grandTotal.toLocaleString()
+                      : Number(paymentInfo.totalAmount).toLocaleString()}
                   </p>
                 </div>
                 <p className="text-xs" style={{ color: "#059669" }}>
@@ -344,94 +466,58 @@ export default function BookingSuccessPage({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* Important Information */}
-        <div
-          className="bg-white rounded-xl shadow-sm border p-6 mb-6"
-          style={{ borderColor: "#e7e5e4" }}
-        >
-          <h3
-            className="font-semibold mb-4 flex items-center gap-2"
-            style={{ color: "#1c1917" }}
+        {/* Important Information — only relevant for room bookings */}
+        {hasRoomBooking && (
+          <div
+            className="bg-white rounded-xl shadow-sm border p-6 mb-6"
+            style={{ borderColor: "#e7e5e4" }}
           >
-            <svg
-              className="w-5 h-5"
-              style={{ color: "#d97706" }}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <h3
+              className="font-semibold mb-4 flex items-center gap-2"
+              style={{ color: "#1c1917" }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            Important Information
-          </h3>
-          <ul className="space-y-2 text-sm" style={{ color: "#57534e" }}>
-            <li className="flex items-start gap-2">
               <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                className="w-5 h-5"
                 style={{ color: "#d97706" }}
-                fill="currentColor"
-                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
                 <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Please bring a valid ID proof for check-in
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0"
-                style={{ color: "#d97706" }}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Early check-in subject to availability
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0"
-                style={{ color: "#d97706" }}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              A confirmation email has been sent to your registered email
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 mt-0.5 flex-shrink-0"
-                style={{ color: "#d97706" }}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              For any queries, contact our support team
-            </li>
-          </ul>
-        </div>
+              Important Information
+            </h3>
+            <ul className="space-y-2 text-sm" style={{ color: "#57534e" }}>
+              {[
+                "Please bring a valid ID proof for check-in",
+                "Early check-in subject to availability",
+                "A confirmation email has been sent to your registered email",
+                "For any queries, contact our support team",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <svg
+                    className="w-4 h-4 mt-0.5 flex-shrink-0"
+                    style={{ color: "#d97706" }}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-4 flex-col sm:flex-row">

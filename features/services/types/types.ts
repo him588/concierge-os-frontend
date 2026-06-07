@@ -15,6 +15,13 @@ export interface CreateStaff {
   isActive: boolean;
 }
 
+export interface AssignedServices {
+  color: string;
+  description: string;
+  name: string;
+  serviceId: string;
+}
+
 export interface Staff {
   staffId: string;
   name: string;
@@ -23,6 +30,8 @@ export interface Staff {
   hotelId: string;
   isAvailable: boolean;
   isActive: boolean;
+  assignedServices?: AssignedServices[];
+  createdAt: string;
 }
 
 export interface StaffService {
@@ -47,4 +56,4 @@ export interface ServiceItem {
   listingType: ListingType;
 }
 
-export type StaffFilter = "all" | "available" | "unavailable" | "inactive";
+export type StaffFilter = "all" | "available" | "unavailable";

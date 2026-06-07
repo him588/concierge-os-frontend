@@ -16,9 +16,39 @@ export interface PaymentInfo {
   paymentSecret: string;
 }
 
+export interface ServiceItem {
+  bookingId: string;
+  serviceName: string;
+  description: string;
+  listingType: "quantity" | "person";
+  quantity: number;
+  price: number;
+  totalAmount: number;
+  status: string;
+  scheduledAt: string | null;
+  notes: string | null;
+}
+
+export interface ServicePaymentInfo {
+  guestName: string;
+  guestEmail: string;
+  services: ServiceItem[];
+  grandTotal: number;
+  orderId: string;
+  paymentSecret: string;
+}
+
 interface PaymentContextValue {
   paymentInfo: PaymentInfo;
   setPaymentInfo: React.Dispatch<React.SetStateAction<PaymentInfo>>;
+  servicePaymentInfo: ServicePaymentInfo | null;
+  setServicePaymentInfo: React.Dispatch<
+    React.SetStateAction<ServicePaymentInfo | null>
+  >;
+  paymentType: "serviceBooking" | "roomBooking" | "none";
+  setPaymentType: React.Dispatch<
+    React.SetStateAction<"serviceBooking" | "roomBooking" | "none">
+  >;
 }
 
 const PaymentContext = createContext<null | PaymentContextValue>(null);
@@ -28,7 +58,7 @@ export default function PaymentContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [paymentInfo, setPaymentInfo] = useState({
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     bookingId: "",
     roomType: "",
     totalNights: "",
@@ -42,13 +72,24 @@ export default function PaymentContextProvider({
     orderId: "",
     paymentSecret: "",
   });
+  const [servicePaymentInfo, setServicePaymentInfo] =
+    useState<ServicePaymentInfo | null>(null);
+  const [paymentType, setPaymentType] = useState<
+    "serviceBooking" | "roomBooking" | "none"
+  >("none");
 
-  const contextValue = useMemo(() => {
-    return {
+  const contextValue = useMemo(
+    () => ({
       paymentInfo,
       setPaymentInfo,
-    };
-  }, [paymentInfo]);
+      servicePaymentInfo,
+      setServicePaymentInfo,
+      paymentType,
+      setPaymentType,
+    }),
+    [paymentInfo, servicePaymentInfo, paymentType],
+  );
+
   return (
     <PaymentContext.Provider value={contextValue}>
       {children}

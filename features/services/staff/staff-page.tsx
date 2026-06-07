@@ -4,58 +4,34 @@ import { useEffect, useState } from "react";
 import { Plus, Users } from "lucide-react";
 import SearchBar from "@/components/common/search-bar";
 import EmptyState from "./empty-state";
-import { Staff, StaffFilter } from "../types/types";
-import { DUMMY_STAFF } from "../types/const";
-import { StaffTable } from "./staff-table";
 import { useGetStaff, useGetStaffListInfinite } from "../hooks/use-api";
+import { StaffTable } from "./staff-table";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-interface StaffPageProps {
-  staff?: Staff[];
-  onAddStaff?: () => void;
-  onEdit?: (s: Staff) => void;
-  onToggleAvailability?: (id: string) => void;
-  onToggleActive?: (id: string) => void;
-  onDelete?: (id: string) => void;
-}
-
-// ── Filter config ──────────────────────────────────────────────────────────────
-const FILTERS: { label: string; value: StaffFilter }[] = [
-  { label: "All", value: "all" },
-  { label: "Available", value: "available" },
-  { label: "Unavailable", value: "unavailable" },
-  { label: "Inactive", value: "inactive" },
-];
-
-// ── StaffPage ──────────────────────────────────────────────────────────────────
-export default function StaffPage({
-  staff = DUMMY_STAFF,
-  onAddStaff,
-  onEdit,
-  onToggleAvailability,
-  onToggleActive,
-  onDelete,
-}: StaffPageProps) {
-  const { data, isLoading, isError } = useGetStaff();
-
+export default function StaffPage({ onAddStaff }: { onAddStaff?: () => void }) {
+  const { data } = useGetStaff();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<StaffFilter>("all");
-  const pageSize = 10;
+  const [debounceSearch, setDebouncedSearch] = useState("");
 
-  const { data: staffList } = useGetStaffListInfinite(pageSize, "all", "");
-
-  // ── Counts ──
-  const total = staff.length;
-  const available = staff.filter((s) => s.isAvailable && s.isActive).length;
-  const unavailable = staff.filter((s) => !s.isAvailable && s.isActive).length;
-  const inactive = staff.filter((s) => !s.isActive).length;
+  const {
+    data: staffData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useGetStaffListInfinite(10, "all", debounceSearch);
 
   useEffect(() => {
-    console.log("staff list", staffList);
-  }, [staffList]);
+    const timer = setTimeout(() => setDebouncedSearch(search), 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const totalStaff = data?.totalStaff ?? 0;
+  const availableStaff = data?.availableStaff ?? 0;
+  const unavailableStaff = data?.unavailableStaff ?? 0;
+  const staffList = staffData?.staffList ?? [];
 
   return (
-    <div className="min-h-screen  font-jakarta mt-5  space-y-5 max-w-7xl mx-auto">
+    <div className="min-h-screen mt-5 space-y-5 max-w-7xl mx-auto">
       {/* ── Page header ── */}
       <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
         <div className="bg-gradient-to-br from-stone-900 to-stone-800 px-6 py-5 flex flex-wrap items-start justify-between gap-4">
@@ -83,63 +59,39 @@ export default function StaffPage({
         </div>
 
         {/* ── Stats strip ── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-stone-100 border-t border-stone-100">
-          <StatCell label="Total staff" value={data.totalStaff} />
-          <StatCell
-            label="Available"
-            value={data.availableStaff}
-            accent="emerald"
-          />
+        <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-stone-100 border-t border-stone-100">
+          <StatCell label="Total staff" value={totalStaff} />
+          <StatCell label="Available" value={availableStaff} accent="emerald" />
           <StatCell
             label="Unavailable"
-            value={data.unavailableStaff}
+            value={unavailableStaff}
             accent="stone"
           />
-          <StatCell label="Inactive" value={data.inactiveStaff} accent="rose" />
         </div>
       </div>
 
-      {/* ── Search + filters ── */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <SearchBar
-          placeholder="Search name, email, service…"
-          value={search}
-          onChange={setSearch}
-          width="w-full sm:w-72"
-        />
-
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => {
-            const active = filter === f.value;
-            return (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-all
-                  ${
-                    active
-                      ? "bg-amber-50 text-amber-800 border-amber-200"
-                      : "bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700"
-                  }`}
-              >
-                {f.label}
-                <span className="ml-1.5 opacity-50">
-                  {f.value === "all"
-                    ? total
-                    : f.value === "available"
-                      ? available
-                      : f.value === "unavailable"
-                        ? unavailable
-                        : inactive}
-                </span>
-              </button>
-            );
-          })}
+      {totalStaff > 0 && (
+        <div className="flex flex-wrap gap-3 items-center">
+          <SearchBar
+            placeholder="Search name, email, service…"
+            value={search}
+            onChange={setSearch}
+            width="w-full sm:w-72"
+          />
         </div>
-      </div>
+      )}
+
+      {/* ── Loading skeleton ── */}
+      {isLoading && (
+        <div className="animate-pulse space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-14 bg-stone-100 rounded-xl" />
+          ))}
+        </div>
+      )}
 
       {/* ── Table or empty ── */}
-      {pageSize > 0 ? (
+      {!isLoading && staffList.length === 0 ? (
         <EmptyState
           icon={Users}
           title="No staff found"
@@ -152,20 +104,30 @@ export default function StaffPage({
           onButtonClick={onAddStaff}
         />
       ) : (
-        <>
-          <StaffTable
-            staff={filtered}
-            onEdit={onEdit}
-            onToggleAvailability={onToggleAvailability}
-            onToggleActive={onToggleActive}
-            onDelete={onDelete}
-          />
+        !isLoading && (
+          <>
+            <StaffTable staff={staffList} />
 
-          <p className="text-xs text-stone-400 text-right">
-            Showing {filtered.length} of {total} staff member
-            {total !== 1 ? "s" : ""}
-          </p>
-        </>
+            {/* ── Load more ── */}
+            {hasNextPage && (
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-5 py-2 text-sm rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-50 transition-all"
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </button>
+              </div>
+            )}
+            {search === "" && (
+              <p className="text-xs text-stone-400 text-right">
+                Showing {staffList.length} of {totalStaff} staff member
+                {totalStaff !== 1 ? "s" : ""}
+              </p>
+            )}
+          </>
+        )
       )}
     </div>
   );

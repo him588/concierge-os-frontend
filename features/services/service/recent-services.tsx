@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import Pagination from "@/components/common/pagination";
 import React, { useMemo, useState } from "react";
 
 type RequestStatus =
@@ -105,6 +106,7 @@ function RecentServices() {
   const [bookings, setBookings] = useState<FrontendBooking[]>(INITIAL_DATA);
 
   const [activeStatus, setActiveStatus] = useState<RequestStatus>("all");
+  const [currentPage, setCurrentPage] = useState(20);
 
   const filteredBookings = useMemo(() => {
     if (activeStatus === "all") return bookings;
@@ -247,6 +249,12 @@ function RecentServices() {
             </p>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={20}
+          className="justify-end"
+        />
       </div>
     </div>
   );
