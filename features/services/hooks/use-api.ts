@@ -21,8 +21,10 @@ import {
   assignStaffToService,
   deleteStaffFromStaff,
   deleteStaff,
+  getServiceBookings,
 } from "../api/api";
 import { CreateStaff, ServiceItem, Services } from "../types/types";
+import { RoomBookingStatus } from "@/features/room-detail/types/types";
 
 export const useGetServices = (status: "Active" | "Inactive") => {
   return useQuery({
@@ -280,5 +282,25 @@ export const useDeleteStaff = () => {
         queryKey: ["staff"],
       });
     },
+  });
+};
+
+type BookingParams = {
+  serviceId?: string;
+  status?: RoomBookingStatus;
+  pageSize: number;
+  offset: number;
+};
+
+export const useGetBookings = (params: BookingParams) => {
+  return useQuery({
+    queryFn: () => getServiceBookings(params),
+    queryKey: [
+      "serviceBookings",
+      params.serviceId,
+      params.status,
+      params.pageSize,
+      params.offset,
+    ],
   });
 };

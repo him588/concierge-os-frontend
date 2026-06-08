@@ -9,8 +9,8 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React, { JSX, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { JSX, useEffect, useState } from "react";
 
 type Page = {
   name: string;
@@ -26,6 +26,7 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const router = useRouter();
+  const pathName = usePathname();
   const [pages, setPages] = useState<Page[]>([
     {
       name: "Overview",
@@ -45,12 +46,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       isActive: false,
       route: "/services",
     },
-    {
-      name: "Earnings",
-      icon: <DollarSign size={16} />,
-      isActive: false,
-      route: "/earnings",
-    },
+    // {
+    //   name: "Earnings",
+    //   icon: <DollarSign size={16} />,
+    //   isActive: false,
+    //   route: "/earnings",
+    // },
     {
       name: "Profile",
       icon: <UsersRound size={16} />,
@@ -64,6 +65,15 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     router.push(route);
     onClose(); // close drawer on mobile after navigation
   };
+
+  useEffect(() => {
+    setPages((prev) =>
+      prev.map((page) => ({
+        ...page,
+        isActive: pathName.includes(page.route),
+      })),
+    );
+  }, []);
 
   const content = (
     <div className="h-full w-full flex flex-col justify-between bg-white border border-stone-100 rounded-3xl shadow-lg shadow-stone-100/80 px-5 py-8">

@@ -13,7 +13,6 @@ import { refreshAccessToken } from "@/components/api/service";
 import { setAccessToken } from "@/components/lib/token-store";
 import { AxiosError } from "axios";
 import { useUserDetails } from "@/features/overview/hooks/hooks";
-import BookingWidget from "@/components/BookingWidget";
 
 export const BaseContext = createContext<BaseContextType | null>(null);
 

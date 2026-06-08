@@ -190,26 +190,18 @@ const Icons = {
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const SOCIALS: SocialLink[] = [
-  { label: "Twitter", icon: <Icons.Twitter />, href: "#" },
-  { label: "LinkedIn", icon: <Icons.Linkedin />, href: "#" },
-  { label: "GitHub", icon: <Icons.Github />, href: "#" },
-  { label: "Email", icon: <Icons.Mail />, href: "#" },
+  {
+    label: "LinkedIn",
+    icon: <Icons.Linkedin />,
+    href: "https://www.linkedin.com/in/himanshu-kashyap-920136226/",
+  },
+  {
+    label: "GitHub",
+    icon: <Icons.Github />,
+    href: "https://github.com/him588",
+  },
+  { label: "Email", icon: <Icons.Mail />, href: "mailto:hk93931212@gmail.com" },
 ];
-
-const MARQUEE_ITEMS = [
-  "Hotel Management",
-  "Booking Widget",
-  "Real-time Analytics",
-  "Channel Manager",
-  "PCI Payments",
-  "White-label",
-  "Auto Invoicing",
-  "Multi-property",
-  "24/7 Support",
-  "Open API",
-];
-
-// ── Newsletter ────────────────────────────────────────────────────────────────
 
 const NewsletterBox: FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -266,7 +258,7 @@ const NewsletterBox: FC = () => {
           <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center flex-shrink-0">
             <Icons.Check />
           </div>
-          <p className="font-jakarta text-xs">You're in! Check your inbox.</p>
+          <p className="font-jakarta text-xs">Youre in! Check your inbox.</p>
         </div>
       ) : (
         <div className="flex gap-2">
@@ -333,9 +325,9 @@ export default function FooterSection(): JSX.Element {
               {/* Contact info */}
               <div className="flex flex-col gap-2">
                 {[
-                  { icon: <Icons.MapPin />, text: "Dubai · London · Bali" },
-                  { icon: <Icons.Phone />, text: "+1 (555) 000-0000" },
-                  { icon: <Icons.Mail />, text: "hello@concierge-os.com" },
+                  { icon: <Icons.MapPin />, text: "Delhi · India " },
+                  { icon: <Icons.Phone />, text: "+91 8447162049" },
+                  { icon: <Icons.Mail />, text: "hk93931212@gmail.com" },
                 ].map((c) => (
                   <div
                     key={c.text}
@@ -354,6 +346,7 @@ export default function FooterSection(): JSX.Element {
                 {SOCIALS.map((s: SocialLink) => (
                   <a
                     key={s.label}
+                    target="_blank"
                     href={s.href}
                     aria-label={s.label}
                     className="social-btn w-8 h-8 rounded-xl border border-stone-200 bg-white flex items-center justify-center text-stone-400"
@@ -387,7 +380,7 @@ export default function FooterSection(): JSX.Element {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="font-jakarta text-[11px] text-stone-400 text-center md:text-left">
               © {new Date().getFullYear()} ConciergeOS. All rights reserved.{" "}
-              Built with ☕ by a human & two AIs.
+              Built with ☕ by a human & build by me.
             </p>
 
             <div className="flex items-center gap-4 flex-wrap justify-center">

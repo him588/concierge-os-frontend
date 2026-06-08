@@ -130,9 +130,9 @@ export async function getServiceBookings({
   pageSize,
   offset,
 }: {
-  guestId: string;
-  serviceId: string;
-  status: RoomBookingStatus;
+  guestId?: string;
+  serviceId?: string;
+  status?: RoomBookingStatus;
   pageSize: number;
   offset: number;
 }) {

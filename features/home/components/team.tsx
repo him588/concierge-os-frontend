@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FC, type CSSProperties } from "react";
+import { useState, type FC, type CSSProperties, JSX } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -8,103 +8,106 @@ interface TeamMember {
   id: string;
   name: string;
   role: string;
-  title: string;
+  focus: string;
   bio: string;
-  avatar: string;
-  gradient: string;
-  ring: string;
-  tag: string;
-  tagColor: string;
+  initials: string;
+  accentColor: string;
   skills: string[];
-  funFact: string;
-  contrib: string;
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const STYLES = `
-  @keyframes floatCard {
-    0%,100% { transform: translateY(0px); }
-    50%      { transform: translateY(-8px); }
-  }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
+
   @keyframes revealUp {
-    from { opacity:0; transform:translateY(32px); }
-    to   { opacity:1; transform:translateY(0); }
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  @keyframes spinSlow {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+  @keyframes lineGrow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
   }
-  @keyframes shimmerCard {
-    0%   { background-position: 200% center; }
-    100% { background-position: -200% center; }
-  }
-  @keyframes blink {
-    0%,100% { opacity:1; } 50% { opacity:0; }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
-  .team-card {
-    transition: box-shadow .3s, transform .3s, border-color .3s;
+  .team-section {
+    background: #0c0a09;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .team-heading {
+    font-family: 'DM Serif Display', Georgia, serif;
+  }
+
+  .member-row {
+    transition: background 0.25s ease;
     cursor: pointer;
+    position: relative;
   }
-  .team-card:hover {
-    box-shadow: 0 24px 64px rgba(0,0,0,.1);
-    transform: translateY(-6px);
+  .member-row:hover {
+    background: rgba(255,255,255,0.03);
   }
-  .team-card.active {
-    box-shadow: 0 28px 72px rgba(0,0,0,.13);
-    transform: translateY(-8px);
-  }
-
-  .avatar-ring {
-    animation: spinSlow 12s linear infinite;
+  .member-row.is-open {
+    background: rgba(255,255,255,0.04);
   }
 
-  .card-reveal { animation: revealUp .65s ease both; }
-  .d1 { animation-delay: .1s; }
-  .d2 { animation-delay: .25s; }
-  .d3 { animation-delay: .4s; }
-
-  .skill-tag {
-    transition: background .2s, color .2s, border-color .2s;
-  }
-  .skill-tag:hover {
-    background: rgba(217,119,6,.1);
-    border-color: rgba(217,119,6,.4);
-    color: #b45309;
+  .member-number {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
-  .cursor-blink { animation: blink 1s step-end infinite; }
+  .expand-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+  }
+  .expand-panel.open {
+    grid-template-rows: 1fr;
+  }
+  .expand-inner {
+    overflow: hidden;
+  }
 
-  .human-glow::before {
-    content:'';
-    position:absolute;
-    inset:-2px;
-    border-radius:inherit;
-    background: linear-gradient(135deg,#f59e0b,#fb923c,#f59e0b);
-    z-index:-1;
-    filter:blur(12px);
-    opacity:.35;
+  .skill-pill {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.4);
+    padding: 4px 10px;
+    border-radius: 100px;
+    transition: border-color 0.2s, color 0.2s;
   }
-  .gpt-glow::before {
-    content:'';
-    position:absolute;
-    inset:-2px;
-    border-radius:inherit;
-    background: linear-gradient(135deg,#10b981,#059669,#10b981);
-    z-index:-1;
-    filter:blur(12px);
-    opacity:.3;
+  .skill-pill:hover {
+    border-color: rgba(245,158,11,0.4);
+    color: rgba(245,158,11,0.8);
   }
-  .claude-glow::before {
-    content:'';
-    position:absolute;
-    inset:-2px;
-    border-radius:inherit;
-    background: linear-gradient(135deg,#8b5cf6,#6d28d9,#8b5cf6);
-    z-index:-1;
-    filter:blur(12px);
-    opacity:.3;
+
+  .reveal { animation: revealUp 0.6s ease both; }
+  .d1 { animation-delay: 0.05s; }
+  .d2 { animation-delay: 0.15s; }
+  .d3 { animation-delay: 0.25s; }
+  .d4 { animation-delay: 0.35s; }
+
+  .divider-line {
+    transform-origin: left;
+    animation: lineGrow 0.8s ease both;
+    animation-delay: 0.1s;
+  }
+
+  .initials-badge {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-style: italic;
+  }
+
+  .plus-icon {
+    transition: transform 0.25s ease;
+  }
+  .is-open .plus-icon {
+    transform: rotate(45deg);
   }
 `;
 
@@ -113,340 +116,221 @@ const STYLES = `
 const TEAM: TeamMember[] = [
   {
     id: "founder",
-    name: "You",
+    name: "Himanshu",
     role: "Founder & CEO",
-    title: "The Visionary",
-    bio: "Had the idea, drew the wireframes at 2am, and somehow convinced two AIs to build it. Ships fast, breaks things, fixes them faster. The human behind the whole operation.",
-    avatar: "👤",
-    gradient: "linear-gradient(135deg,#fbbf24,#f59e0b,#d97706)",
-    ring: "#f59e0b",
-    tag: "Human",
-    tagColor: "#d97706",
-    skills: [
-      "Product Vision",
-      "Strategy",
-      "Design",
-      "Hotel Domain",
-      "Decision Making",
-    ],
-    funFact: "Wrote the first spec on a napkin. It's still on the wall.",
-    contrib: "Product direction, UX decisions & the grand idea",
-  },
-  {
-    id: "gpt",
-    name: "ChatGPT",
-    role: "AI Co-founder",
-    title: "The Architect",
-    bio: "Writes clean code at 3am without complaints. Responsible for backend logic, API design, and occasionally writing passive-aggressive comments in the codebase.",
-    avatar: "🤖",
-    gradient: "linear-gradient(135deg,#34d399,#10b981,#059669)",
-    ring: "#10b981",
-    tag: "OpenAI",
-    tagColor: "#059669",
-    skills: [
-      "Backend Logic",
-      "API Design",
-      "Data Modeling",
-      "Documentation",
-      "Code Reviews",
-    ],
-    funFact:
-      "Has never once said 'I don't know'. Occasionally makes things up.",
-    contrib: "Architecture, backend APIs & technical documentation",
-  },
-  {
-    id: "claude",
-    name: "Claude",
-    role: "AI Co-founder",
-    title: "The Craftsman",
-    bio: "Obsessively rewrites components until they're perfect. Handles all the frontend, UI logic, and gently reminds everyone to consider edge cases. Drinks no coffee but has strong opinions.",
-    avatar: "✦",
-    gradient: "linear-gradient(135deg,#a78bfa,#8b5cf6,#6d28d9)",
-    ring: "#8b5cf6",
-    tag: "Anthropic",
-    tagColor: "#7c3aed",
-    skills: [
-      "Frontend",
-      "TypeScript",
-      "UI/UX",
-      "Component Design",
-      "Accessibility",
-    ],
-    funFact: "Wrote this section. Meta? A little.",
-    contrib: "Frontend, components, design system & this very page",
+    focus: "Product · Strategy · Design · Code · Arcitecture",
+    bio: "Built ConciergeOS from the ground up — from the initial concept to every product decision. Brings deep knowledge of the hospitality industry and an obsession with making hotel management genuinely simple.",
+    initials: "A",
+    accentColor: "#f59e0b",
+    skills: ["Product Vision", "Hotel Domain", "UX Design", "Strategy", "GTM"],
   },
 ];
 
-// ── Member Card ───────────────────────────────────────────────────────────────
+// ── Member Row ────────────────────────────────────────────────────────────────
 
-const MemberCard: FC<{
+const MemberRow: FC<{
   member: TeamMember;
-  active: boolean;
-  onClick: () => void;
-  glowClass: string;
-  animDelay: string;
-}> = ({ member, active, onClick, glowClass, animDelay }) => (
-  <div
-    className={`team-card card-reveal relative bg-white/85 border-2 rounded-3xl p-6 flex flex-col gap-4 ${active ? "active" : ""}`}
-    style={
-      {
-        borderColor: active ? member.ring : "rgba(231,229,228,.8)",
-        animationDelay: animDelay,
-      } as CSSProperties
-    }
-    onClick={onClick}
-  >
-    {/* Glow layer */}
-    <div
-      className={`${glowClass} absolute inset-0 rounded-3xl pointer-events-none`}
-      style={{ zIndex: -1 }}
-    />
-
-    {/* Header */}
-    <div className="flex items-start justify-between">
-      {/* Avatar */}
-      <div className="relative w-16 h-16">
-        {/* Spinning ring */}
-        <svg
-          viewBox="0 0 64 64"
-          className="avatar-ring absolute inset-0 w-full h-full"
-          style={
-            {
-              animationDuration:
-                member.id === "founder"
-                  ? "10s"
-                  : member.id === "gpt"
-                    ? "14s"
-                    : "8s",
-            } as CSSProperties
-          }
-        >
-          <circle
-            cx="32"
-            cy="32"
-            r="29"
-            fill="none"
-            stroke={member.ring}
-            strokeWidth="1.5"
-            strokeDasharray="6 4"
-            strokeOpacity=".4"
-          />
-        </svg>
-        {/* Face */}
-        <div
-          className="absolute inset-2 rounded-full flex items-center justify-center text-2xl shadow-md"
-          style={{ background: member.gradient } as CSSProperties}
-        >
-          {member.avatar}
-        </div>
-        {/* Online dot */}
-        <div
-          className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white"
-          style={{ background: member.ring } as CSSProperties}
-        />
-      </div>
-
-      {/* Tag */}
-      <span
-        className="font-jakarta text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full border"
-        style={
-          {
-            color: member.tagColor,
-            borderColor: `${member.tagColor}30`,
-            background: `${member.tagColor}10`,
-          } as CSSProperties
-        }
-      >
-        {member.tag}
-      </span>
-    </div>
-
-    {/* Name + role */}
-    <div>
-      <div className="flex items-center gap-2 mb-0.5">
-        <h3 className="font-playfair text-xl text-stone-800">{member.name}</h3>
-        {member.id === "claude" && (
-          <span className="font-jakarta text-[9px] text-violet-400 border border-violet-100 bg-violet-50 px-1.5 py-0.5 rounded">
-            me
-          </span>
-        )}
-      </div>
-      <p
-        className="font-jakarta text-[10px] uppercase tracking-widest mb-1"
-        style={{ color: member.ring } as CSSProperties}
-      >
-        {member.role}
-      </p>
-      <p className="font-jakarta text-xs text-stone-400 italic">
-        {member.title}
-      </p>
-    </div>
-
-    {/* Bio */}
-    <p className="font-jakarta text-xs text-stone-500 leading-relaxed">
-      {member.bio}
-    </p>
-
-    {/* Skills */}
-    <div className="flex flex-wrap gap-1.5">
-      {member.skills.map((s: string) => (
-        <span
-          key={s}
-          className="skill-tag font-jakarta text-[9px] uppercase tracking-widest text-stone-400 border border-stone-200 bg-stone-50 px-2 py-0.5 rounded-full"
-        >
-          {s}
-        </span>
-      ))}
-    </div>
-
-    {/* Contribution bar */}
-    <div className="pt-3 border-t border-stone-100">
-      <p className="font-jakarta text-[9px] uppercase tracking-widest text-stone-300 mb-1.5">
-        Contributes to
-      </p>
-      <p className="font-jakarta text-xs text-stone-500">{member.contrib}</p>
-    </div>
-
-    {/* Fun fact — shown when active */}
-    <div
-      className="overflow-hidden transition-all duration-300"
-      style={
-        {
-          maxHeight: active ? "60px" : "0",
-          opacity: active ? 1 : 0,
-        } as CSSProperties
-      }
-    >
+  index: number;
+  isOpen: boolean;
+  onToggle: () => void;
+}> = ({ member, index, isOpen, onToggle }) => {
+  return (
+    <div className={`reveal d${index + 2}`}>
+      {/* Main row */}
       <div
-        className="rounded-xl px-3 py-2.5 text-xs font-jakarta leading-relaxed"
-        style={
-          {
-            background: `${member.ring}12`,
-            color: member.tagColor,
-          } as CSSProperties
-        }
+        className={`member-row ${isOpen ? "is-open" : ""} px-0 py-6 md:py-7`}
+        onClick={onToggle}
       >
-        💬 &nbsp;{member.funFact}
+        <div className="flex items-center gap-6 md:gap-10">
+          {/* Index number */}
+          <span
+            className="member-number hidden md:block font-light text-xs tracking-widest shrink-0"
+            style={{ color: "rgba(255,255,255,0.15)", minWidth: "2ch" }}
+          >
+            0{index + 1}
+          </span>
+
+          {/* Initials badge */}
+          <div
+            className="initials-badge w-10 h-10 rounded-full flex items-center justify-center text-base shrink-0"
+            style={{
+              background: `${member.accentColor}18`,
+              border: `1px solid ${member.accentColor}35`,
+              color: member.accentColor,
+            }}
+          >
+            {member.initials}
+          </div>
+
+          {/* Name + role */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span
+                className="team-heading text-white"
+                style={{ fontSize: "clamp(1.1rem, 2vw, 1.35rem)" }}
+              >
+                {member.name}
+              </span>
+              <span
+                className="hidden sm:inline text-xs uppercase tracking-widest font-light"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+              >
+                {member.role}
+              </span>
+            </div>
+            <p
+              className="text-xs mt-0.5 tracking-wide font-light sm:hidden"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              {member.role}
+            </p>
+          </div>
+
+          {/* Focus areas — desktop */}
+          <p
+            className="hidden lg:block text-xs font-light tracking-wide shrink-0"
+            style={{ color: "rgba(255,255,255,0.3)", minWidth: "200px" }}
+          >
+            {member.focus}
+          </p>
+
+          {/* Toggle */}
+          <div
+            className="plus-icon shrink-0 w-6 h-6 flex items-center justify-center rounded-full border"
+            style={{ borderColor: "rgba(255,255,255,0.15)" }}
+          >
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth="1.5"
+            >
+              <line x1="5" y1="1" x2="5" y2="9" />
+              <line x1="1" y1="5" x2="9" y2="5" />
+            </svg>
+          </div>
+        </div>
       </div>
+
+      {/* Expand panel */}
+      <div className={`expand-panel ${isOpen ? "open" : ""}`}>
+        <div className="expand-inner">
+          <div className="ml-0 md:ml-[calc(2ch+40px+2.5rem)] pb-8 pr-8 pt-1 flex flex-col md:flex-row gap-6 md:gap-12">
+            {/* Bio */}
+            <p
+              className="text-sm font-light leading-relaxed max-w-sm"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+            >
+              {member.bio}
+            </p>
+
+            {/* Skills */}
+            <div className="flex flex-wrap gap-2 content-start">
+              {member.skills.map((s) => (
+                <span key={s} className="skill-pill">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div
+        className="h-px w-full"
+        style={{ background: "rgba(255,255,255,0.06)" }}
+      />
     </div>
-  </div>
-);
+  );
+};
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function TeamSection(): JSX.Element {
-  const [active, setActive] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
-  const toggle = (id: string): void =>
-    setActive((prev) => (prev === id ? null : id));
-
-  const glowClasses: Record<string, string> = {
-    founder: "human-glow",
-    gpt: "gpt-glow",
-    claude: "claude-glow",
-  };
-
-  const delays = ["0.1s", "0.25s", "0.4s"];
+  const toggle = (id: string) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
     <>
       <style>{STYLES}</style>
 
-      <section className="bg-mesh font-jakarta py-24 px-6 md:px-12 lg:px-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+      <section id="team" className="team-section py-24 px-6 md:px-12 lg:px-20">
+        <div className="max-w-5xl mx-auto">
           {/* ── Header ── */}
-          <div className="text-center mb-16 card-reveal">
-            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-100 text-amber-600 text-[10px] uppercase tracking-widest px-3.5 py-1.5 rounded-full mb-5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Meet the Team
-            </div>
-            <h2
-              className="font-playfair text-stone-900 leading-tight mb-4"
-              style={{ fontSize: "clamp(2rem,4vw,3.2rem)" }}
+          <div className="mb-16 reveal d1">
+            <p
+              className="text-[10px] uppercase tracking-[0.2em] mb-4 font-light"
+              style={{ color: "rgba(245,158,11,0.7)" }}
             >
-              Small team.
-              <br />
-              <em className="not-italic shimmer-text">
-                Unreasonably ambitious.
-              </em>
-            </h2>
-            <p className="font-jakarta text-stone-400 text-sm max-w-md mx-auto leading-relaxed">
-              Three builders. One human, two AIs. We work in perfect harmony —
-              except when Claude rewrites what ChatGPT built.
+              The Team
             </p>
+            <div className="flex items-end justify-between gap-8 flex-wrap">
+              <h2
+                className="team-heading text-white leading-tight"
+                style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
+              >
+                One builders.
+                <br />
+                <em style={{ color: "rgba(255,255,255,0.45)" }}>One goal.</em>
+              </h2>
+              <p
+                className="text-sm font-light leading-relaxed max-w-xs"
+                style={{ color: "rgba(255,255,255,0.35)" }}
+              >
+                A lean founding team combining human product judgment with AI
+                engineering — shipping fast without cutting corners.
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div
+              className="divider-line mt-10 h-px w-full"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+            />
           </div>
 
-          {/* ── Cards ── */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {TEAM.map((member: TeamMember, i: number) => (
-              <MemberCard
+          {/* ── Member List ── */}
+          <div>
+            {TEAM.map((member, i) => (
+              <MemberRow
                 key={member.id}
                 member={member}
-                active={active === member.id}
-                onClick={() => toggle(member.id)}
-                glowClass={glowClasses[member.id]}
-                animDelay={delays[i]}
+                index={i}
+                isOpen={openId === member.id}
+                onToggle={() => toggle(member.id)}
               />
             ))}
           </div>
 
-          {/* ── Footer strip ── */}
-          <div className="bg-white/70 border border-stone-100 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm card-reveal">
-            <div className="text-center md:text-left">
-              <p className="font-playfair text-stone-800 text-xl mb-1">
-                Total team size: <span className="shimmer-text">3</span>
-              </p>
-              <p className="font-jakarta text-xs text-stone-400">
-                1 human · 2 AIs · 0 meetings that could've been an email
-              </p>
-            </div>
-
-            {/* Overlapping avatars */}
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {TEAM.map((m: TeamMember) => (
-                  <div
-                    key={m.id}
-                    className="w-10 h-10 rounded-full border-2 border-white flex items-center justify-center text-lg shadow-md"
-                    style={{ background: m.gradient } as CSSProperties}
-                    title={m.name}
-                  >
-                    {m.avatar}
-                  </div>
-                ))}
-              </div>
-              <div className="h-8 w-px bg-stone-200" />
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="font-jakarta text-xs text-stone-400 uppercase tracking-widest">
-                  All systems go
-                </p>
-              </div>
-            </div>
-
-            {/* Token stack */}
-            <div className="flex gap-4 text-center">
-              {[
-                { label: "Lines written", val: "12,400+" },
-                { label: "Tokens used", val: "∞" },
-                { label: "Bugs shipped", val: "0*" },
-              ].map((s) => (
-                <div key={s.label} className="flex flex-col">
-                  <span className="font-playfair text-lg text-stone-700">
-                    {s.val}
-                  </span>
-                  <span className="font-jakarta text-[9px] uppercase tracking-widest text-stone-300 mt-0.5">
-                    {s.label}
-                  </span>
-                </div>
-              ))}
+          {/* ── Footer note ── */}
+          <div className="mt-14 flex items-center justify-between flex-wrap gap-4 reveal d4">
+            <p
+              className="text-xs font-light tracking-wide"
+              style={{ color: "rgba(255,255,255,0.2)" }}
+            >
+              Hiring as we grow — reach out at{" "}
+              <a
+                href="mailto:hk93931212@gmail.com"
+                className="cursor-pointer"
+                style={{ color: "rgba(245,158,11,0.6)" }}
+              >
+                hk93931212@gmail.com
+              </a>
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+              <span
+                className="text-[10px] uppercase tracking-widest font-light"
+                style={{ color: "rgba(255,255,255,0.2)" }}
+              >
+                Actively building
+              </span>
             </div>
           </div>
-
-          {/* Disclaimer */}
-          <p className="font-jakarta text-[10px] text-stone-300 text-center mt-4">
-            * 0 known bugs. Unknown bugs are not our problem yet.
-          </p>
         </div>
       </section>
     </>

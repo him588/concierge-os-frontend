@@ -56,4 +56,33 @@ export interface ServiceItem {
   listingType: ListingType;
 }
 
+export enum ServiceBookingStatus {
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+}
+
+export interface ServiceBookings {
+  id: string;
+  status: ServiceBookingStatus;
+  quantity: number;
+  createdAt: string;
+  serviceId: string;
+  serviceName: string;
+  serviceItemId: string;
+  serviceItemName: string;
+  serviceItemPrice: number;
+  guestId: string;
+  guestName: string;
+  guestEmail: string;
+  staffId: string | null;
+  staffName: string | null;
+  staffEmail: string | null;
+  roomId: string;
+  roomNumber: string;
+  roomFloor: string;
+}
+
 export type StaffFilter = "all" | "available" | "unavailable";

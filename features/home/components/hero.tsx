@@ -14,6 +14,7 @@ import {
 } from "./types/const";
 import { MetricChip } from "./metric-chips";
 import { DashboardCard } from "./dashboard-card";
+import { useRouter } from "next/navigation";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
@@ -128,6 +129,7 @@ const STYLES = `
 `;
 
 export default function HeroSection(): JSX.Element {
+  const router = useRouter();
   return (
     <>
       <style>{STYLES}</style>
@@ -153,10 +155,10 @@ export default function HeroSection(): JSX.Element {
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-widest text-stone-400">
-          {NAV_LINKS.map(({ name }: NavLink) => (
+          {NAV_LINKS.map(({ name, route }: NavLink) => (
             <a
               key={name}
-              href="#"
+              href={route}
               className="hover:text-stone-700 transition-colors"
             >
               {name}
@@ -166,6 +168,7 @@ export default function HeroSection(): JSX.Element {
 
         <button
           type="button"
+          onClick={() => router.push("/login")}
           className="btn-shine hidden md:flex items-center gap-2 bg-stone-900 text-white text-[11px] uppercase tracking-widest px-4 py-2.5 rounded-xl font-medium hover:bg-stone-800 transition-colors"
         >
           Get Started <Icons.Arrow />
@@ -174,7 +177,7 @@ export default function HeroSection(): JSX.Element {
 
       {/* ── TICKER ── */}
       <div
-        className="fixed top-[60px] inset-x-0 z-30 overflow-hidden border-b font-jakarta"
+        className="fixed top-[60px]   inset-x-0 z-30 overflow-hidden border-b font-jakarta"
         style={
           {
             borderColor: "rgba(231,212,180,.5)",
@@ -183,9 +186,9 @@ export default function HeroSection(): JSX.Element {
           } as CSSProperties
         }
       >
-        <div className="flex ticker-track whitespace-nowrap py-1.5">
+        <div className="flex mt-[8px] ticker-track whitespace-nowrap py-1.5">
           {[0, 1].map((rep: number) => (
-            <span key={rep} className="flex">
+            <span key={rep} className="flex ">
               {TICKER_ITEMS.map(({ text }: TickerItem, i: number) => (
                 <span
                   key={i}
@@ -238,12 +241,14 @@ export default function HeroSection(): JSX.Element {
               <div className="anim-fade-up delay-4 flex flex-wrap items-center gap-3 mb-10">
                 <button
                   type="button"
+                  onClick={() => router.push("/login")}
                   className="btn-shine flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium px-6 py-3.5 rounded-2xl shadow-lg shadow-amber-200 hover-lift"
                 >
                   Register Your Hotel <Icons.Arrow />
                 </button>
                 <button
                   type="button"
+                  onClick={() => router.push("/login")}
                   className="flex items-center gap-2 text-stone-500 text-sm border border-stone-200 bg-white/80 px-5 py-3.5 rounded-2xl hover:border-stone-300 hover-lift transition-all"
                 >
                   <Icons.Chart /> View Live Demo
@@ -251,7 +256,7 @@ export default function HeroSection(): JSX.Element {
               </div>
 
               {/* Stats */}
-              <div className="anim-fade-up delay-5 flex flex-wrap gap-6 pt-8 border-t border-stone-100">
+              {/* <div className="anim-fade-up delay-5 flex flex-wrap gap-6 pt-8 border-t border-stone-100">
                 {STATS.map((s: StatItem) => (
                   <div key={s.label}>
                     <p className="font-playfair text-2xl text-stone-800 font-medium flex items-center gap-1">
@@ -262,7 +267,7 @@ export default function HeroSection(): JSX.Element {
                     </p>
                   </div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* ── RIGHT ── */}

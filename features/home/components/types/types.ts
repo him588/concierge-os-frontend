@@ -56,4 +56,5 @@ export interface TickerItem {
 
 export interface NavLink {
   name: string;
+  route: string;
 }

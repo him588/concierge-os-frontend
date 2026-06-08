@@ -3,10 +3,10 @@ import { NavLink, TickerItem, StatItem } from "./types";
 export const CDN_URL = "https://cdn.concierge-os.com/widget/v2/booking.js";
 
 export const NAV_LINKS: NavLink[] = [
-  { name: "Features" },
-  { name: "Dashboard" },
-  { name: "Pricing" },
-  { name: "Docs" },
+  { name: "Features", route: "#features" },
+  { name: "Teams", route: "#teams" },
+  { name: "Pricing", route: "#pricing" },
+  { name: "Docs", route: "#docs" },
 ];
 
 export const TICKER_ITEMS: TickerItem[] = [

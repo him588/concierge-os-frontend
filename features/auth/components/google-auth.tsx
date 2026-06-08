@@ -9,10 +9,11 @@ import {
 import { handleGoogleAuth } from "./services/services";
 import { setAccessToken } from "@/components/lib/token-store";
 import { useRouter } from "next/navigation";
-import { ENV } from "@/components/config/env";
+import { useBaseContext } from "@/context/base-context";
 
 function GoogleAuth() {
   const router = useRouter();
+  const { setIsAuthReady } = useBaseContext();
   async function googleResponse(
     res: Omit<TokenResponse, "error" | "error_description" | "error_uri">,
   ) {
@@ -28,6 +29,8 @@ function GoogleAuth() {
             router.push("/onboarding");
           }
         }
+        setAccessToken(response.data.accessToken || "");
+        setIsAuthReady(true);
       }
     } catch (error) {
       console.log("Error while google authentication", error);

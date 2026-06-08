@@ -24,10 +24,10 @@ function Header() {
       {/* Right side */}
       <div className="flex items-center gap-5">
         {/* Bell */}
-        <div className="relative w-12 h-12 bg-white border border-stone-100 rounded-full flex items-center justify-center text-stone-400 shadow-sm cursor-pointer hover:border-amber-100 hover:text-amber-500 transition-all">
+        {/* <div className="relative w-12 h-12 bg-white border border-stone-100 rounded-full flex items-center justify-center text-stone-400 shadow-sm cursor-pointer hover:border-amber-100 hover:text-amber-500 transition-all">
           <Bell size={18} />
           <span className="absolute top-2 right-3 w-3 h-3 rounded-full bg-amber-400 border-2 border-white" />
-        </div>
+        </div> */}
 
         {/* Divider */}
         <div className="w-px h-6 bg-stone-200" />

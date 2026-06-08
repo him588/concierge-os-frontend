@@ -36,58 +36,63 @@ function Pagination({
   }
 
   return (
-    <div
-      className={twMerge(
-        "flex items-center justify-center gap-1 py-2",
-        className,
-      )}
-    >
-      {/* Prev */}
-      <button
-        onClick={() => setCurrentPage(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="w-8 h-8 flex items-center justify-center rounded-xl border border-stone-200 text-stone-400 text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 cursor-pointer"
+    <div className=" flex items-center justify-between">
+      <p className=" text-sm font-light text-gray-300">
+        Total {currentPage} of {totalPages} pages
+      </p>
+      <div
+        className={twMerge(
+          "flex items-center justify-center gap-1 py-2",
+          className,
+        )}
       >
-        ‹
-      </button>
+        {/* Prev */}
+        <button
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center rounded-xl border border-stone-200 text-stone-400 text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 cursor-pointer"
+        >
+          ‹
+        </button>
 
-      {/* Pages */}
-      {getShownContent().map((item, index) =>
-        item === "..." ? (
-          <span
-            key={index}
-            className="w-8 h-8 flex items-center justify-center text-stone-300 text-sm select-none"
-          >
-            ···
-          </span>
-        ) : (
-          <button
-            key={index}
-            onClick={() => setCurrentPage(item as number)}
-            className={`w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all cursor-pointer ${
-              currentPage === item
-                ? "bg-amber-500 text-white border border-amber-500 shadow-sm"
-                : "border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50"
-            }`}
-            style={
-              currentPage === item
-                ? { fontFamily: "var(--font-playfair)" }
-                : undefined
-            }
-          >
-            {item}
-          </button>
-        ),
-      )}
+        {/* Pages */}
+        {getShownContent().map((item, index) =>
+          item === "..." ? (
+            <span
+              key={index}
+              className="w-8 h-8 flex items-center justify-center text-stone-300 text-sm select-none"
+            >
+              ···
+            </span>
+          ) : (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(item as number)}
+              className={`w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all cursor-pointer ${
+                currentPage === item
+                  ? "bg-amber-500 text-white border border-amber-500 shadow-sm"
+                  : "border border-stone-200 text-stone-500 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50"
+              }`}
+              style={
+                currentPage === item
+                  ? { fontFamily: "var(--font-playfair)" }
+                  : undefined
+              }
+            >
+              {item}
+            </button>
+          ),
+        )}
 
-      {/* Next */}
-      <button
-        onClick={() => setCurrentPage(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="w-8 h-8 flex items-center justify-center rounded-xl border border-stone-200 text-stone-400 text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 cursor-pointer"
-      >
-        ›
-      </button>
+        {/* Next */}
+        <button
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center rounded-xl border border-stone-200 text-stone-400 text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50 cursor-pointer"
+        >
+          ›
+        </button>
+      </div>
     </div>
   );
 }
