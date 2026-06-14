@@ -26,6 +26,15 @@ import {
 import { CreateStaff, ServiceItem, Services } from "../types/types";
 import { RoomBookingStatus } from "@/features/room-detail/types/types";
 
+interface RawServiceItem {
+  name?: string;
+  description?: string;
+  id?: string;
+  price?: number;
+  isAvailable?: boolean;
+  listingType?: string;
+}
+
 export const useGetServices = (status: "Active" | "Inactive") => {
   return useQuery({
     queryKey: ["services", status],
@@ -119,7 +128,7 @@ export const useGetSubServices = (serviceId: string) => {
     select: (data): ServiceItem[] => {
       const serviceItem = data?.data?.subServices ?? [];
 
-      return serviceItem.map((item) => ({
+      return serviceItem.map((item: RawServiceItem) => ({
         name: item.name ?? "Unknown",
         description: item.description ?? "",
         serviceId: item.id ?? "",

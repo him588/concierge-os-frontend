@@ -55,11 +55,12 @@ export function AuthForm({
       const response = await handleRegisterUser(userDetails);
       const user = response.data.user;
       setDetails({
-        name: user.name,
-        email: user.email,
+        name: user.name || "",
+        email: user.email || "",
         propertyId: null,
-        role: user.role,
-        userId: user.userId,
+        role: user.role || "",
+        userId: user.userId || "",
+        propertyName: null,
       });
       setToastMessage(`OTP  is only valid for 5 minutes  `);
       setToastType("success");

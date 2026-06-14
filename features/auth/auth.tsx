@@ -83,9 +83,12 @@ export default function AuthPage(): JSX.Element {
             </div>
 
             {/* Google button */}
-            <GoogleOAuthProvider clientId={ENV.GOOGLE_CLIENT_ID!}>
-              <GoogleAuth />
-            </GoogleOAuthProvider>
+
+            {ENV.GOOGLE_CLIENT_ID && (
+              <GoogleOAuthProvider clientId={ENV.GOOGLE_CLIENT_ID}>
+                <GoogleAuth />
+              </GoogleOAuthProvider>
+            )}
 
             {/* Divider */}
             <div className="flex items-center gap-3 mb-5 fade-up d2">

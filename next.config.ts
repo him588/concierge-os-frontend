@@ -1,9 +1,27 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
+  output: "standalone",
   images: {
-    domains: ["images.unsplash.com", "plus.unsplash.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
+    ],
   },
+  compiler: {
+    removeConsole:
+      process.env.APP_ENV === "production" ? { exclude: ["error"] } : false,
+  },
+
+  productionBrowserSourceMaps: false,
+
   /* config options here */
 };
 
