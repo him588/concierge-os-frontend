@@ -60,6 +60,10 @@ export default function BaseContextProvider({
     updateUserDetails();
   }, [data?.data]);
 
+  useEffect(() => {
+    console.log("value of user details", userDetails);
+  }, [userDetails]);
+
   const baseContextValue = useMemo<BaseContextType | null>(() => {
     return {
       userDetails,

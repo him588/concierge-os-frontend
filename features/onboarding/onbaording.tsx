@@ -11,6 +11,7 @@ import StepThree from "@/features/onboarding/components/step-three";
 import OnboardingForm from "@/features/onboarding/components/onboarding-form";
 import { useUIContext } from "@/context/ui-context";
 import { useOnboarding } from "./components/hooks/use-onboarding";
+import { useBaseContext } from "@/context/base-context";
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ export default function OnboardingPage(): JSX.Element {
   const [step, setStep] = useState<number>(1);
   const { setToastMessage, setToastType } = useUIContext();
   const { mutateAsync } = useOnboarding();
+  const { setUserDetails } = useBaseContext();
 
   const [details, setDetails] = useState<PropertyDetails>({
     name: "",
@@ -79,7 +81,20 @@ export default function OnboardingPage(): JSX.Element {
 
   async function handleCreateProperty() {
     try {
-      await mutateAsync(details);
+      await mutateAsync(details, {
+        onSuccess: (data) => {
+          const property = data.data.property;
+          if (property && property?._id && property?.name) {
+            setUserDetails((prev) => {
+              if (prev === null) {
+                return null;
+              }
+              return { ...prev, name: property.name, propertyId: property._id };
+            });
+          }
+          console.log(data.data.property);
+        },
+      });
     } catch (error) {
       console.log("Error while creating Property", error);
     }
